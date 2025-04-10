@@ -18,26 +18,26 @@ BenchBase (formerly [OLTPBench](https://github.com/oltpbenchmark/oltpbench/)) is
 
 ## Quickstart
 
-To clone and build BenchBase using the `postgres` profile,
+To clone and build BenchBase using the `polypheny` profile,
 
 ```bash
-git clone --depth 1 https://github.com/cmu-db/benchbase.git
-cd benchbase
-./mvnw clean package -P postgres
+git clone --depth 1 git@github.com:jakob-spiess/benchbaseWithPoly.git
+cd benchbaseWithPoly
+./mvnw clean package -P polypheny
 ```
 
 This produces artifacts in the `target` folder, which can be extracted,
 
 ```bash
 cd target
-tar xvzf benchbase-postgres.tgz
-cd benchbase-postgres
+tar xvzf benchbase-polypheny.tgz
+cd benchbase-polypheny
 ```
 
-Inside this folder, you can run BenchBase. For example, to execute the `tpcc` benchmark,
+Inside this folder, you can run BenchBase. For example, to execute the `ycsb` benchmark,
 
 ```bash
-java -jar benchbase.jar -b tpcc -c config/postgres/sample_tpcc_config.xml --create=true --load=true --execute=true
+java -jar benchbase.jar -b tpcc -c config/polypheny/sample_ycsb_config.xml --create=true --load=true --execute=true
 ```
 
 A full list of options can be displayed,
