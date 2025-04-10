@@ -37,7 +37,7 @@ cd benchbase-polypheny
 Inside this folder, you can run BenchBase. For example, to execute the `ycsb` benchmark,
 
 ```bash
-java -jar benchbase.jar -b tpcc -c config/polypheny/sample_ycsb_config.xml --create=true --load=true --execute=true
+java -jar benchbase.jar -b ycsb -c config/polypheny/sample_ycsb_config.xml --create=true --load=true --execute=true
 ```
 
 A full list of options can be displayed,
