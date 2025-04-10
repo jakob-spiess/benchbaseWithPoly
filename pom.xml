@@ -12,9 +12,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>23</java.version>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <buildDirectory>${project.basedir}/target</buildDirectory>
         <!--
             Provids a way to limit which assembly package formats we produce.
@@ -49,6 +49,28 @@
     </distributionManagement>
 
     <profiles>
+    <!--Added to get Polypheny:-->
+        <profile>
+            <id>polypheny</id>
+            <activation>
+                <property>
+                    <name>env.BENCHBASE_PROFILE</name>
+                    <value>polypheny</value>
+                </property>
+            </activation>
+            <properties>
+                <classifier>polypheny</classifier>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.polypheny</groupId>
+                    <artifactId>polypheny-jdbc-driver</artifactId>
+                    <version>2.3</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
+    <!--Added to get Polypheny-->
         <profile>
             <id>sqlite</id>
             <activation>
