@@ -4,12 +4,13 @@
     <!-- Connection details -->
     <type>POLYPHENY</type>
     <driver>org.polypheny.jdbc.PolyphenyDriver</driver>
-    <url>jdbc:polypheny://localhost:20590/benchbase?sslmode=disable&amp;ApplicationName=ycsb&amp;reWriteBatchedInserts=true</url>
+    <url>jdbc:polypheny://localhost:20590/public?sslmode=disable&amp;ApplicationName=ycsb&amp;reWriteBatchedInserts=true</url>
     <username>pa</username>
     <password></password>
     <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
     <isolation>TRANSACTION_SERIALIZABLE</isolation>
     <batchsize>128</batchsize>
+    <ddl>src/main/resources/benchmarks/ycsb/ddl-polypheny.sql</ddl>
 
     <!-- Scalefactor in YCSB is *1000 the number of rows in the USERTABLE -->
     <scalefactor>1</scalefactor>
