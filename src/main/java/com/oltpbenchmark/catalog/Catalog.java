@@ -19,6 +19,7 @@ package com.oltpbenchmark.catalog;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,5 +51,13 @@ public final class Catalog implements AbstractCatalog {
   @Override
   public void close() throws SQLException {
     // No-op.
+  }
+
+  public void addTable(String name, List<Column> columns) {
+    Table table = new Table(name, null);
+    for (Column column : columns) {
+      table.addColumn(column);
+    }
+    this.tables.put(name, table);
   }
 }

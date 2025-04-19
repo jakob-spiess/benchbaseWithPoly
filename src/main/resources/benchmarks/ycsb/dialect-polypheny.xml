@@ -2,8 +2,8 @@
 <dialects>
     <dialect type="POLYPHENY">
         <procedure name="ReadModifyWriteRecord">
-            <statement name="selectStmt">
-                Select * from USERTABLE where YCSB_KEY=?
+            <statement name="selectStmt"><!-- FOR UPDATE -->
+                SELECT * FROM USERTABLE WHERE YCSB_KEY = ?
             </statement>
         </procedure>
     </dialect>

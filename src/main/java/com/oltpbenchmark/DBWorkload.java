@@ -158,7 +158,19 @@ public class DBWorkload {
       wrkld.setIsolationMode(xmlConfig.getString("isolation" + pluginTest, isolationMode));
       wrkld.setScaleFactor(xmlConfig.getDouble("scalefactor", 1.0));
       wrkld.setDataDir(xmlConfig.getString("datadir", "."));
+      System.out.println(System.getProperty("user.dir"));
+      System.out.println("DDL Path: " + xmlConfig.getString("ddlpath", null));
       wrkld.setDDLPath(xmlConfig.getString("ddlpath", null));
+
+      String ddlPath = xmlConfig.getString("ddlpath", null);
+      System.out.println("Raw ddlPath from XML: " + ddlPath);
+
+      // TEST: Check actual resolved path and existence
+      File ddl = new File(ddlPath);
+      System.out.println("Absolute path: " + ddl.getAbsolutePath());
+      System.out.println("Exists? " + ddl.exists());
+
+      wrkld.setDDLPath(ddlPath);
 
       double selectivity = -1;
       try {

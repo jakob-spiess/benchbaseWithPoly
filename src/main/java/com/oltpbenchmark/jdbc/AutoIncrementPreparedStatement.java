@@ -39,6 +39,7 @@ public class AutoIncrementPreparedStatement implements PreparedStatement {
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
     if (this.dbType == DatabaseType.POSTGRES
+        || this.dbType == DatabaseType.POLYPHENY
         || this.dbType == DatabaseType.COCKROACHDB
         || this.dbType == DatabaseType.SQLSERVER
         || this.dbType == DatabaseType.SQLAZURE) {
