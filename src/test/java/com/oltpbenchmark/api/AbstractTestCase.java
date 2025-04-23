@@ -25,6 +25,8 @@ import com.oltpbenchmark.catalog.AbstractCatalog;
 import com.oltpbenchmark.types.DatabaseType;
 import com.oltpbenchmark.util.ClassUtil;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.sql.Connection;
@@ -183,7 +185,13 @@ public abstract class AbstractTestCase<T extends BenchmarkModule> {
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
       cleanupServer();
-      fail("postCreateDatabaseSetup() failed");
+
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      String stackTrace = sw.toString();
+
+      fail("postCreateDatabaseSetup() failed" + stackTrace);
     }
   }
 

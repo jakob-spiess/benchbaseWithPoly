@@ -8,7 +8,8 @@
       You can include a schema in your URL if desired (e.g. /public),
       or leave it off to use the default for your user.
     -->
-    <url>jdbc:polypheny://localhost:20590</url>
+    <!--<url>jdbc:polypheny://localhost:20590</url>-->
+    <url>jdbc:polypheny://localhost:20590/public</url>
     <username>pa</username>
     <password></password>
     <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
@@ -20,11 +21,15 @@
       Path to your Polypheny TPCC DDL. 
       Adjust this relative path to wherever you’ve got ddl‐tpcc‐polypheny.sql 
     -->
-    <ddlPath>../../src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlPath>
+    <!--<ddlFileName>src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlFileName>-->
+    <!--<ddl>/home/jakob/benchbaseWithPoly/src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddl>-->
+
+    <ddlpath>src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlpath>
+    <!--<dialect>src/main/resources/benchmarks/tpcc/dialect-polypheny.xml</dialect>-->
 
     <!-- **HERE** you tell it where to pick up the dialect overrides: -->
-    <dialectFile></dialectFile><!--../../src/main/resources/benchmarks/tpcc/dialect-polypheny.sql-->
-
+    <!--<dialectFileName>src/main/resources/benchmarks/tpcc/dialect-polypheny.sql</dialectFileName>-->
+    
     <!-- Scale factor = number of warehouses in TPCC -->
     <scalefactor>1</scalefactor>
 

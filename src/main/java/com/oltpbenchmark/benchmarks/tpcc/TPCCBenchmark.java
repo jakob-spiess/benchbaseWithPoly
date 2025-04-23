@@ -9,12 +9,15 @@ import com.oltpbenchmark.catalog.Catalog;
 import com.oltpbenchmark.catalog.Column;
 import com.oltpbenchmark.catalog.Table;
 import com.oltpbenchmark.types.DatabaseType;
+import com.oltpbenchmark.util.SQLUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,18 +32,71 @@ import org.slf4j.LoggerFactory;
 public final class TPCCBenchmark extends BenchmarkModule {
   private static final Logger LOG = LoggerFactory.getLogger(TPCCBenchmark.class);
 
+  // TPCC parameters (configurable via XML: warehouses, districtsPerWarehouse, items)
+  protected final int numWarehouses;
+  protected final int numDistrictsPerWarehouse;
+  protected final int numItems;
+
   public TPCCBenchmark(WorkloadConfiguration workConf) {
     super(workConf);
+
+    if (workConf.getXmlConfig() != null) {
+      this.numWarehouses =
+          workConf.getXmlConfig().containsKey("warehouses")
+              ? workConf.getXmlConfig().getInt("warehouses")
+              : 1;
+      this.numDistrictsPerWarehouse =
+          workConf.getXmlConfig().containsKey("districtsPerWarehouse")
+              ? workConf.getXmlConfig().getInt("districtsPerWarehouse")
+              : 10;
+      this.numItems =
+          workConf.getXmlConfig().containsKey("items")
+              ? workConf.getXmlConfig().getInt("items")
+              : 100000;
+    } else {
+      this.numWarehouses = 1;
+      this.numDistrictsPerWarehouse = 10;
+      this.numItems = 100000;
+    }
+
+    // No need to set dialect path manually — it's picked up from the config XML
   }
 
   @Override
   protected Package getProcedurePackageImpl() {
-    return (NewOrder.class.getPackage());
+    return NewOrder.class.getPackage();
   }
 
   @Override
   protected List<Worker<? extends BenchmarkModule>> makeWorkersImpl() {
-    throw new UnsupportedOperationException("TPCC workers not yet implemented");
+    List<Worker<? extends BenchmarkModule>> workers = new ArrayList<>();
+    try {
+      // Count existing records in USERTABLE
+      Table t = this.getCatalog().getTable("USERTABLE");
+      String userCountSql = SQLUtil.getMaxColSQL(this.workConf.getDatabaseType(), t, "tcpp_key");
+      try (Connection metaConn = this.makeConnection();
+          java.sql.Statement stmt = metaConn.createStatement();
+          ResultSet res = stmt.executeQuery(userCountSql)) {
+        int initRecordCount = 0;
+        while (res.next()) {
+          initRecordCount = res.getInt(1);
+        }
+        int startKey = initRecordCount + 1;
+        for (int i = 0; i < workConf.getTerminals(); i++) {
+          workers.add(
+              new TPCCWorker(
+                  this,
+                  i,
+                  startKey,
+                  this.numWarehouses,
+                  this.numDistrictsPerWarehouse,
+                  this.numItems));
+        }
+      }
+    } catch (SQLException e) {
+      LOG.error(e.getMessage(), e);
+    }
+    return workers;
   }
 
   @Override
@@ -56,10 +112,11 @@ public final class TPCCBenchmark extends BenchmarkModule {
   private void executeDDL(Connection conn) {
     String ddlPath = workConf.getDDLPath();
 
+    // Fallback if not defined
     if (ddlPath == null) {
-      LOG.info(workConf.toString());
-      LOG.info("No DDL path provided, skipping DDL execution.");
-      return;
+      ddlPath =
+          "/home/jakob/benchbaseWithPoly/src/main/resources/benchmarks/tpcc/ddl-polypheny.sql";
+      LOG.info("No DDL path provided in config. Using fallback path: {}", ddlPath);
     }
 
     File ddlFile = new File(ddlPath);
@@ -70,77 +127,63 @@ public final class TPCCBenchmark extends BenchmarkModule {
     try {
       String ddl = Files.readString(ddlFile.toPath(), StandardCharsets.UTF_8);
       try (java.sql.Statement sqlStmt = conn.createStatement()) {
-        // Execute each SQL statement via JDBC
-        for (String statement : ddl.split(";")) {
-          statement = statement.trim();
-          if (!statement.isEmpty()) {
-            LOG.info("Executing DDL: {}", statement);
-            sqlStmt.execute(statement);
+        for (String stmt : ddl.split(";")) {
+          stmt = stmt.trim();
+          if (stmt.isEmpty()) continue;
 
-            // Try parsing the statement with JSQLParser
-            try {
-              net.sf.jsqlparser.statement.Statement parsedStmt = CCJSqlParserUtil.parse(statement);
-              if (parsedStmt instanceof CreateTable
-                  && workConf.getDatabaseType() == DatabaseType.POLYPHENY
-                  && getCatalog() instanceof Catalog) {
+          LOG.info("Executing DDL: {}", stmt);
+          sqlStmt.execute(stmt);
 
-                Catalog catalog = (Catalog) getCatalog();
-                CreateTable createTable = (CreateTable) parsedStmt;
-                String tableName = createTable.getTable().getName();
-                List<ColumnDefinition> columnDefs = createTable.getColumnDefinitions();
+          try {
+            net.sf.jsqlparser.statement.Statement parsed = CCJSqlParserUtil.parse(stmt);
+            if (parsed instanceof CreateTable
+                && workConf.getDatabaseType() == DatabaseType.POLYPHENY
+                && getCatalog() instanceof Catalog) {
 
-                Table table = new Table(tableName, "\"");
+              Catalog catalog = (Catalog) getCatalog();
+              CreateTable ct = (CreateTable) parsed;
+              String tableName = ct.getTable().getName();
+              List<ColumnDefinition> colDefs = ct.getColumnDefinitions();
+              Table table = new Table(tableName, "\"");
 
-                List<Index> indexes = createTable.getIndexes();
-                Set<String> pkColumns = new HashSet<>();
-                if (indexes != null) {
-                  for (Index indexObj : indexes) {
-                    if ("PRIMARY KEY".equalsIgnoreCase(indexObj.getType())) {
-                      pkColumns.addAll(indexObj.getColumnsNames());
-                    }
+              Set<String> pkCols = new HashSet<>();
+              if (ct.getIndexes() != null) {
+                for (Index idx : ct.getIndexes()) {
+                  if ("PRIMARY KEY".equalsIgnoreCase(idx.getType())) {
+                    pkCols.addAll(idx.getColumnsNames());
                   }
                 }
-
-                for (int i = 0; i < columnDefs.size(); i++) {
-                  ColumnDefinition colDef = columnDefs.get(i);
-                  String colName = colDef.getColumnName();
-                  String dataType = colDef.getColDataType().getDataType().toUpperCase();
-
-                  int sqlType;
-                  Integer size = null;
-
-                  switch (dataType) {
-                    case "INT":
-                    case "INTEGER":
-                      sqlType = java.sql.Types.INTEGER;
-                      break;
-                    case "VARCHAR":
-                    case "TEXT":
-                    case "STRING":
-                    default:
-                      sqlType = java.sql.Types.VARCHAR;
-                      break;
-                  }
-
-                  boolean isPrimaryKey = pkColumns.contains(colName);
-                  boolean nullable = !isPrimaryKey;
-
-                  Column column = new Column(colName, "\"", table, sqlType, size, nullable);
-                  table.addColumn(column);
-                }
-
-                catalog.addTable(table.getName(), table.getColumns());
               }
-            } catch (JSQLParserException e) {
-              LOG.warn(
-                  "Skipping catalog update for statement due to parse error: {}", e.getMessage());
+
+              for (ColumnDefinition cd : colDefs) {
+                String colName = cd.getColumnName();
+                String dt = cd.getColDataType().getDataType().toUpperCase();
+                int sqlType;
+                Integer size = null;
+                switch (dt) {
+                  case "INT":
+                  case "INTEGER":
+                    sqlType = java.sql.Types.INTEGER;
+                    break;
+                  default:
+                    sqlType = java.sql.Types.VARCHAR;
+                    break;
+                }
+                boolean isPK = pkCols.contains(colName);
+                Column column = new Column(colName, "\"", table, sqlType, size, !isPK);
+                table.addColumn(column);
+              }
+
+              catalog.addTable(table.getName(), table.getColumns());
             }
+          } catch (JSQLParserException e) {
+            LOG.warn(
+                "Skipping catalog update for statement due to parse error: {}", e.getMessage());
           }
         }
       }
-
     } catch (IOException | SQLException e) {
-      throw new RuntimeException("Failed to execute DDL file: " + ddlFile.getAbsolutePath(), e);
+      throw new RuntimeException("Failed to execute DDL file: " + ddlPath, e);
     }
   }
 }

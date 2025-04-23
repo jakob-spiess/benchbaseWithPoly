@@ -7,7 +7,7 @@
     <url>jdbc:polypheny://localhost:20590/public?sslmode=disable&amp;ApplicationName=ycsb&amp;reWriteBatchedInserts=true</url>
     <username>pa</username>
     <password></password>
-    <ddlpath>../../src/main/resources/benchmarks/ycsb/ddl-polypheny.sql</ddlpath>
+    <ddlpath>src/main/resources/benchmarks/ycsb/ddl-polypheny.sql</ddlpath>
     <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
     <isolation>TRANSACTION_READ_COMMITTED</isolation>
     <batchsize>128</batchsize>
