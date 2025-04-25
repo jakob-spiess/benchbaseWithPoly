@@ -26,6 +26,7 @@ import com.oltpbenchmark.benchmarks.tpcc.pojo.Customer;
 import com.oltpbenchmark.benchmarks.tpcc.pojo.District;
 import com.oltpbenchmark.benchmarks.tpcc.pojo.Warehouse;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Random;
@@ -309,7 +310,9 @@ public class Payment extends TPCCProcedure {
 
   private void updateWarehouse(Connection conn, int w_id, float paymentAmount) throws SQLException {
     try (PreparedStatement payUpdateWhse = this.getPreparedStatement(conn, payUpdateWhseSQL)) {
-      payUpdateWhse.setBigDecimal(1, BigDecimal.valueOf(paymentAmount));
+      payUpdateWhse.setBigDecimal(
+          1, BigDecimal.valueOf(paymentAmount).setScale(2, RoundingMode.HALF_UP));
+      // payUpdateWhse.setBigDecimal(1, BigDecimal.valueOf(paymentAmount));
       payUpdateWhse.setInt(2, w_id);
       // MySQL reports deadlocks due to lock upgrades:
       // t1: read w_id = x; t2: update w_id = x; t1 update w_id = x
@@ -378,7 +381,9 @@ public class Payment extends TPCCProcedure {
   private void updateDistrict(Connection conn, int w_id, int districtID, float paymentAmount)
       throws SQLException {
     try (PreparedStatement payUpdateDist = this.getPreparedStatement(conn, payUpdateDistSQL)) {
-      payUpdateDist.setBigDecimal(1, BigDecimal.valueOf(paymentAmount));
+      payUpdateDist.setBigDecimal(
+          1, BigDecimal.valueOf(paymentAmount).setScale(2, RoundingMode.HALF_UP));
+      // payUpdateDist.setBigDecimal(1, BigDecimal.valueOf(paymentAmount));
       payUpdateDist.setInt(2, w_id);
       payUpdateDist.setInt(3, districtID);
 
@@ -469,8 +474,12 @@ public class Payment extends TPCCProcedure {
       throws SQLException {
     try (PreparedStatement payUpdateCustBalCdata =
         this.getPreparedStatement(conn, payUpdateCustBalCdataSQL)) {
-      payUpdateCustBalCdata.setDouble(1, c.c_balance);
-      payUpdateCustBalCdata.setDouble(2, c.c_ytd_payment);
+      payUpdateCustBalCdata.setBigDecimal(
+          1, BigDecimal.valueOf(c.c_balance).setScale(2, RoundingMode.HALF_UP));
+      payUpdateCustBalCdata.setBigDecimal(
+          2, BigDecimal.valueOf(c.c_ytd_payment).setScale(2, RoundingMode.HALF_UP));
+      // payUpdateCustBalCdata.setDouble(1, c.c_balance);
+      // payUpdateCustBalCdata.setDouble(2, c.c_ytd_payment);
       payUpdateCustBalCdata.setInt(3, c.c_payment_cnt);
       payUpdateCustBalCdata.setString(4, c.c_data);
       payUpdateCustBalCdata.setInt(5, customerWarehouseID);
@@ -497,8 +506,12 @@ public class Payment extends TPCCProcedure {
 
     try (PreparedStatement payUpdateCustBal =
         this.getPreparedStatement(conn, payUpdateCustBalSQL)) {
-      payUpdateCustBal.setDouble(1, c.c_balance);
-      payUpdateCustBal.setDouble(2, c.c_ytd_payment);
+      payUpdateCustBal.setBigDecimal(
+          1, BigDecimal.valueOf(c.c_balance).setScale(2, RoundingMode.HALF_UP));
+      payUpdateCustBal.setBigDecimal(
+          2, BigDecimal.valueOf(c.c_ytd_payment).setScale(2, RoundingMode.HALF_UP));
+      // payUpdateCustBal.setDouble(1, c.c_balance);
+      // payUpdateCustBal.setDouble(2, c.c_ytd_payment);
       payUpdateCustBal.setInt(3, c.c_payment_cnt);
       payUpdateCustBal.setInt(4, customerWarehouseID);
       payUpdateCustBal.setInt(5, customerDistrictID);
@@ -545,7 +558,9 @@ public class Payment extends TPCCProcedure {
       payInsertHist.setInt(4, districtID);
       payInsertHist.setInt(5, w_id);
       payInsertHist.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-      payInsertHist.setDouble(7, paymentAmount);
+      payInsertHist.setBigDecimal(
+          7, BigDecimal.valueOf(paymentAmount).setScale(2, RoundingMode.HALF_UP));
+      // payInsertHist.setDouble(7, paymentAmount);
       payInsertHist.setString(8, h_data);
       payInsertHist.executeUpdate();
     }

@@ -22,7 +22,10 @@ import com.oltpbenchmark.api.LoaderThread;
 import com.oltpbenchmark.benchmarks.tpcc.pojo.*;
 import com.oltpbenchmark.catalog.Table;
 import com.oltpbenchmark.util.SQLUtil;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -180,7 +183,12 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
         int idx = 1;
         itemPrepStmt.setLong(idx++, item.i_id);
         itemPrepStmt.setString(idx++, item.i_name);
-        itemPrepStmt.setDouble(idx++, item.i_price);
+        itemPrepStmt.setBigDecimal(
+            idx++,
+            BigDecimal.valueOf(item.i_price)
+                .setScale(2, RoundingMode.HALF_UP) // matches DECIMAL(5,2)
+            );
+
         itemPrepStmt.setString(idx++, item.i_data);
         itemPrepStmt.setLong(idx, item.i_im_id);
         itemPrepStmt.addBatch();
@@ -223,8 +231,17 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
 
       int idx = 1;
       whsePrepStmt.setLong(idx++, warehouse.w_id);
-      whsePrepStmt.setDouble(idx++, warehouse.w_ytd);
-      whsePrepStmt.setDouble(idx++, warehouse.w_tax);
+      whsePrepStmt.setBigDecimal(
+          idx++,
+          BigDecimal.valueOf(warehouse.w_ytd)
+              .setScale(2, RoundingMode.HALF_UP) // matches DECIMAL(12,2)
+          );
+      whsePrepStmt.setBigDecimal(
+          idx++,
+          BigDecimal.valueOf(warehouse.w_tax)
+              .setScale(4, RoundingMode.HALF_UP) // matches DECIMAL(5,4) or DECIMAL(4,4)
+          );
+
       whsePrepStmt.setString(idx++, warehouse.w_name);
       whsePrepStmt.setString(idx++, warehouse.w_street_1);
       whsePrepStmt.setString(idx++, warehouse.w_street_2);
@@ -275,7 +292,12 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
         stockPreparedStatement.setLong(idx++, stock.s_w_id);
         stockPreparedStatement.setLong(idx++, stock.s_i_id);
         stockPreparedStatement.setLong(idx++, stock.s_quantity);
-        stockPreparedStatement.setDouble(idx++, stock.s_ytd);
+        stockPreparedStatement.setBigDecimal(
+            idx++,
+            BigDecimal.valueOf(stock.s_ytd)
+                .setScale(2, RoundingMode.HALF_UP) // matches DECIMAL(8,2)
+            );
+
         stockPreparedStatement.setLong(idx++, stock.s_order_cnt);
         stockPreparedStatement.setLong(idx++, stock.s_remote_cnt);
         stockPreparedStatement.setString(idx++, stock.s_data);
@@ -332,8 +354,12 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
         int idx = 1;
         distPrepStmt.setLong(idx++, district.d_w_id);
         distPrepStmt.setLong(idx++, district.d_id);
-        distPrepStmt.setDouble(idx++, district.d_ytd);
-        distPrepStmt.setDouble(idx++, district.d_tax);
+        distPrepStmt.setBigDecimal(
+            idx++,
+            BigDecimal.valueOf(district.d_ytd).setScale(2, RoundingMode.HALF_UP)); // DECIMAL(12,2)
+        distPrepStmt.setBigDecimal(
+            idx++,
+            BigDecimal.valueOf(district.d_tax).setScale(4, RoundingMode.HALF_UP)); // DECIMAL(5,4)
         distPrepStmt.setLong(idx++, district.d_next_o_id);
         distPrepStmt.setString(idx++, district.d_name);
         distPrepStmt.setString(idx++, district.d_street_1);
@@ -402,13 +428,28 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
           custPrepStmt.setLong(idx++, customer.c_w_id);
           custPrepStmt.setLong(idx++, customer.c_d_id);
           custPrepStmt.setLong(idx++, customer.c_id);
-          custPrepStmt.setDouble(idx++, customer.c_discount);
+          custPrepStmt.setBigDecimal(
+              idx++,
+              BigDecimal.valueOf(customer.c_discount)
+                  .setScale(4, RoundingMode.HALF_UP)); // c_discount
           custPrepStmt.setString(idx++, customer.c_credit);
           custPrepStmt.setString(idx++, customer.c_last);
           custPrepStmt.setString(idx++, customer.c_first);
-          custPrepStmt.setDouble(idx++, customer.c_credit_lim);
-          custPrepStmt.setDouble(idx++, customer.c_balance);
-          custPrepStmt.setDouble(idx++, customer.c_ytd_payment);
+          custPrepStmt.setBigDecimal(
+              idx++,
+              BigDecimal.valueOf(customer.c_credit_lim)
+                  .setScale(2, RoundingMode.HALF_UP)); // c_credit_lim
+          custPrepStmt.setBigDecimal(
+              idx++,
+              BigDecimal.valueOf(customer.c_balance)
+                  .setScale(2, RoundingMode.HALF_UP)); // c_balance
+          custPrepStmt.setBigDecimal(
+              idx++,
+              BigDecimal.valueOf(customer.c_ytd_payment)
+                  .setScale(
+                      2, RoundingMode.HALF_UP) // use scale=2 if you changed it to DECIMAL(15,2)
+              );
+
           custPrepStmt.setLong(idx++, customer.c_payment_cnt);
           custPrepStmt.setLong(idx++, customer.c_delivery_cnt);
           custPrepStmt.setString(idx++, customer.c_street_1);
@@ -421,7 +462,6 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
           custPrepStmt.setString(idx++, customer.c_middle);
           custPrepStmt.setString(idx, customer.c_data);
           custPrepStmt.addBatch();
-
           k++;
 
           if (k != 0 && (k % workConf.getBatchSize()) == 0) {
@@ -430,12 +470,11 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
           }
         }
       }
-
       custPrepStmt.executeBatch();
       custPrepStmt.clearBatch();
 
     } catch (SQLException se) {
-      LOG.error(se.getMessage());
+      LOG.error("This is executed: " + se.getMessage());
     }
   }
 
@@ -468,7 +507,12 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
           histPrepStmt.setInt(idx++, history.h_d_id);
           histPrepStmt.setInt(idx++, history.h_w_id);
           histPrepStmt.setTimestamp(idx++, history.h_date);
-          histPrepStmt.setDouble(idx++, history.h_amount);
+          histPrepStmt.setBigDecimal(
+              idx++,
+              BigDecimal.valueOf(history.h_amount)
+                  .setScale(2, RoundingMode.HALF_UP) // matches DECIMAL(6,2)
+              );
+
           histPrepStmt.setString(idx, history.h_data);
           histPrepStmt.addBatch();
 
@@ -666,14 +710,16 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
             } else {
               orderLineStatement.setNull(idx++, 0);
             }
-            orderLineStatement.setDouble(idx++, order_line.ol_amount);
+            orderLineStatement.setBigDecimal(
+                idx++, BigDecimal.valueOf(order_line.ol_amount).setScale(2, RoundingMode.HALF_UP));
             orderLineStatement.setLong(idx++, order_line.ol_supply_w_id);
-            orderLineStatement.setDouble(idx++, order_line.ol_quantity);
+            orderLineStatement.setBigDecimal(
+                idx++,
+                BigDecimal.valueOf(order_line.ol_quantity).setScale(0, RoundingMode.HALF_UP));
             orderLineStatement.setString(idx, order_line.ol_dist_info);
             orderLineStatement.addBatch();
 
             k++;
-
             if (k != 0 && (k % workConf.getBatchSize()) == 0) {
               orderLineStatement.executeBatch();
               orderLineStatement.clearBatch();
@@ -681,7 +727,6 @@ public final class TPCCLoader extends Loader<TPCCBenchmark> {
           }
         }
       }
-
       orderLineStatement.executeBatch();
       orderLineStatement.clearBatch();
 

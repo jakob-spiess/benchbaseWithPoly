@@ -23,6 +23,8 @@ import com.oltpbenchmark.benchmarks.tpcc.TPCCConstants;
 import com.oltpbenchmark.benchmarks.tpcc.TPCCUtil;
 import com.oltpbenchmark.benchmarks.tpcc.TPCCWorker;
 import com.oltpbenchmark.benchmarks.tpcc.pojo.Stock;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.Random;
 import org.slf4j.Logger;
@@ -222,6 +224,20 @@ public class NewOrder extends TPCCProcedure {
 
         String ol_dist_info = getDistInfo(d_id, s);
 
+        // 🔍 Debug all key insert values:
+        /*
+        System.out.println("---- Inserting OrderLine ----");
+        System.out.println("OL_O_ID = " + d_next_o_id);
+        System.out.println("OL_D_ID = " + d_id);
+        System.out.println("OL_W_ID = " + w_id);
+        System.out.println("OL_NUMBER = " + ol_number);
+        System.out.println("OL_I_ID = " + ol_i_id);
+        System.out.println("OL_SUPPLY_W_ID = " + ol_supply_w_id);
+        System.out.println("OL_QUANTITY = " + ol_quantity);
+        System.out.println("OL_AMOUNT = " + ol_amount);
+        System.out.println("OL_DIST_INFO = " + ol_dist_info);
+        */
+
         stmtInsertOrderLine.setInt(1, d_next_o_id);
         stmtInsertOrderLine.setInt(2, d_id);
         stmtInsertOrderLine.setInt(3, w_id);
@@ -229,7 +245,10 @@ public class NewOrder extends TPCCProcedure {
         stmtInsertOrderLine.setInt(5, ol_i_id);
         stmtInsertOrderLine.setInt(6, ol_supply_w_id);
         stmtInsertOrderLine.setInt(7, ol_quantity);
-        stmtInsertOrderLine.setDouble(8, ol_amount);
+        stmtInsertOrderLine.setBigDecimal(
+            8, BigDecimal.valueOf(ol_amount).setScale(2, RoundingMode.HALF_UP));
+        // System.out.println("OL_AMOUNT = " + ol_amount);
+        // stmtInsertOrderLine.setDouble(8, ol_amount);
         stmtInsertOrderLine.setString(9, ol_dist_info);
         stmtInsertOrderLine.addBatch();
 
@@ -240,6 +259,17 @@ public class NewOrder extends TPCCProcedure {
         } else {
           s_remote_cnt_increment = 1;
         }
+
+        // 🔍 Debug stock update values:
+        /*
+        System.out.println("---- Updating Stock ----");
+        System.out.println("S_QUANTITY = " + s.s_quantity);
+        System.out.println("S_YTD increment = " + ol_quantity);
+        System.out.println("S_ORDER_CNT increment = 1");
+        System.out.println("S_REMOTE_CNT increment = " + s_remote_cnt_increment);
+        System.out.println("S_I_ID = " + ol_i_id);
+        System.out.println("S_W_ID = " + ol_supply_w_id);
+        */
 
         stmtUpdateStock.setInt(1, s.s_quantity);
         stmtUpdateStock.setInt(2, ol_quantity);

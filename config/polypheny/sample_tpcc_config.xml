@@ -25,7 +25,7 @@
     <!--<ddl>/home/jakob/benchbaseWithPoly/src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddl>-->
 
     <ddlpath>src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlpath>
-    <!--<dialect>src/main/resources/benchmarks/tpcc/dialect-polypheny.xml</dialect>-->
+    <dialect>src/main/resources/benchmarks/tpcc/dialect-polypheny.xml</dialect>
 
     <!-- **HERE** you tell it where to pick up the dialect overrides: -->
     <!--<dialectFileName>src/main/resources/benchmarks/tpcc/dialect-polypheny.sql</dialectFileName>-->
@@ -34,14 +34,14 @@
     <scalefactor>1</scalefactor>
 
     <!-- Number of concurrent clients ("terminals") -->
-    <terminals>10</terminals>
+    <terminals>1</terminals>
 
     <works>
         <work>
             <!-- Total runtime in seconds -->
             <time>300</time>
             <!-- Target aggregate txn/sec across all terminals -->
-            <rate>2000</rate>
+            <rate>100</rate>
             <!-- Weights: NewOrder, Payment, OrderStatus, Delivery, StockLevel -->
             <weights>45,43,4,4,4</weights>
         </work>
