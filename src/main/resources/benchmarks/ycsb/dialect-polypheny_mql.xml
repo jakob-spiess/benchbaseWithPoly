@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<dialects>
+    <dialect type="MQL">
+        <procedure name="ReadModifyWriteRecord">
+            <statement name="selectStmt">
+                db.usertable.findOneAndUpdate(
+                    { YCSB_KEY: ? },
+                    { $set: { /* Fields to modify will be bound dynamically */ } },
+                    { returnDocument: "after" }
+                )
+            </statement>
+        </procedure>
+    </dialect>
+</dialects>
