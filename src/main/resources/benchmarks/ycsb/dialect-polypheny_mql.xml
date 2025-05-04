@@ -1,14 +1,61 @@
 <?xml version="1.0"?>
 <dialects>
     <dialect type="POLYPHENY">
+
+        <procedure name="DeleteRecord">
+            <statement name="deleteStmt">
+                db.usertable.deleteOne({ YCSB_KEY: ? })
+            </statement>
+        </procedure>
+
+        <procedure name="InsertRecord">
+            <statement name="insertStmt">
+                db.usertable.insertOne({
+                    YCSB_KEY: ?,
+                    FIELD0: ?, FIELD1: ?, FIELD2: ?, FIELD3: ?, FIELD4: ?,
+                    FIELD5: ?, FIELD6: ?, FIELD7: ?, FIELD8: ?, FIELD9: ?
+                })
+            </statement>
+        </procedure>
+
         <procedure name="ReadModifyWriteRecord">
             <statement name="selectStmt">
                 db.usertable.findOneAndUpdate(
                     { YCSB_KEY: ? },
-                    { $set: { /* Fields to modify will be bound dynamically */ } },
+                    {
+                        $set: {
+                            FIELD0: ?, FIELD1: ?, FIELD2: ?, FIELD3: ?, FIELD4: ?,
+                            FIELD5: ?, FIELD6: ?, FIELD7: ?, FIELD8: ?, FIELD9: ?
+                        }
+                    },
                     { returnDocument: "after" }
                 )
             </statement>
         </procedure>
+
+        <procedure name="ReadRecord">
+            <statement name="readStmt">
+                db.usertable.find({ YCSB_KEY: ? }).limit(1)
+            </statement>
+        </procedure>
+
+        <procedure name="ScanRecord">
+            <statement name="scanStmt">
+                db.usertable.find({ YCSB_KEY: { $gt: ?, $lt: ? } }).sort({ YCSB_KEY: 1 })
+            </statement>
+        </procedure>
+
+        <procedure name="UpdateRecord">
+            <statement name="updateAllStmt">
+                db.usertable.updateOne(
+                    { YCSB_KEY: ? },
+                    { $set: {
+                        FIELD1: ?, FIELD2: ?, FIELD3: ?, FIELD4: ?, FIELD5: ?,
+                        FIELD6: ?, FIELD7: ?, FIELD8: ?, FIELD9: ?, FIELD10: ?
+                    } }
+                )
+            </statement>
+        </procedures>
+
     </dialect>
 </dialects>

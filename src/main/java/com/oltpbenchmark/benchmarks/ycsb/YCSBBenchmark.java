@@ -57,7 +57,11 @@ public final class YCSBBenchmark extends BenchmarkModule {
   public YCSBBenchmark(WorkloadConfiguration workConf) {
     super(workConf);
 
-    
+    // This (hopefully) tells OLTPBench to parse the <dialect> XML and replace the hardcoded SQL
+    // inside procedure classes.
+    // I hope this is a good place to use otherwise try putting it in makeWorkersImpl()
+    // COMMENTED OUT FOR NOW
+    // this.loadProcedures(this.workConf.getDialectPath());
 
     int fieldSize = YCSBConstants.MAX_FIELD_SIZE;
     if (workConf.getXmlConfig() != null && workConf.getXmlConfig().containsKey("fieldSize")) {
