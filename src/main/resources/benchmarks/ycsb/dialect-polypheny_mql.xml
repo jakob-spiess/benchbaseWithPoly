@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <dialects>
-    <dialect type="MQL">
+    <dialect type="POLYPHENY">
         <procedure name="ReadModifyWriteRecord">
             <statement name="selectStmt">
                 db.usertable.findOneAndUpdate(

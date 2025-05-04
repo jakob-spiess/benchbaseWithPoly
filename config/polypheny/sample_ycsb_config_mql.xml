@@ -2,18 +2,19 @@
 <parameters>
 
     <!-- Connection details -->
-    <!-- This MQL type might be wrong or I might be able to set that myself later -->
-    <type>MQL</type>
+    <type>POLYPHENY</type>
     <driver>org.polypheny.jdbc.PolyphenyDriver</driver>
     <url>jdbc:polypheny://localhost:20590/public?sslmode=disable&amp;ApplicationName=ycsb</url>
     <username>pa</username>
     <password></password>
-    <ddlpath>src/main/resources/benchmarks/ycsb/ddl-polypheny.js</ddlpath>
+    <ddlpath>src/main/resources/benchmarks/ycsb/ddl-polypheny.sql</ddlpath>
     <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
 
+    <dialect>src/main/resources/benchmarks/ycsb/dialect-polypheny_mql.xml</dialect>
+
     <!-- Optional for MQL: remove if unsupported -->
-    <!-- <isolation>TRANSACTION_READ_COMMITTED</isolation> -->
-    <!-- <batchsize>128</batchsize> -->
+    <isolation>TRANSACTION_READ_COMMITTED</isolation>
+    <batchsize>128</batchsize>
 
     <scalefactor>1</scalefactor>
 

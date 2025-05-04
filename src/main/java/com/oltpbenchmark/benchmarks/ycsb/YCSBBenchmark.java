@@ -57,6 +57,8 @@ public final class YCSBBenchmark extends BenchmarkModule {
   public YCSBBenchmark(WorkloadConfiguration workConf) {
     super(workConf);
 
+    
+
     int fieldSize = YCSBConstants.MAX_FIELD_SIZE;
     if (workConf.getXmlConfig() != null && workConf.getXmlConfig().containsKey("fieldSize")) {
       fieldSize =
