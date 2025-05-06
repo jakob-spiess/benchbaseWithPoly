@@ -81,6 +81,14 @@ public final class YCSBBenchmark extends BenchmarkModule {
       }
     }
     this.skewFactor = skewFactor;
+
+    /*To dynamically change the hardcoded SQL statements in the procedure files,
+    like /home/jakob/benchbaseWithPoly/src/main/java/com/oltpbenchmark/benchmarks/ycsb/procedures/UpdateRecord.java
+    to MQL statements as specified here: /home/jakob/benchbaseWithPoly/src/main/resources/benchmarks/ycsb/dialect-polypheny_mql.xml
+    */
+    // this.loadProcedures(this.workConf.getDialectPath());
+
+    // ==> Probably this is done with an argument in the terminal command so find out...
   }
 
   @Override

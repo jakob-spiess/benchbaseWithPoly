@@ -10,7 +10,7 @@
     <ddlpath>src/main/resources/benchmarks/ycsb/ddl-polypheny.sql</ddlpath>
     <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
 
-    <dialect>src/main/resources/benchmarks/ycsb/dialect-polypheny_mql.xml</dialect>
+    <dialect>/benchmarks/ycsb/dialect-polypheny_mql.xml</dialect>
 
     <!-- Optional for MQL: remove if unsupported -->
     <isolation>TRANSACTION_READ_COMMITTED</isolation>

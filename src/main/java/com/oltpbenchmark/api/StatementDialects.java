@@ -17,6 +17,7 @@
 
 package com.oltpbenchmark.api;
 
+import com.oltpbenchmark.DBWorkload;
 import com.oltpbenchmark.WorkloadConfiguration;
 import com.oltpbenchmark.api.dialects.*;
 import com.oltpbenchmark.types.DatabaseType;
@@ -29,6 +30,7 @@ import java.util.Map.Entry;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import org.apache.commons.configuration2.XMLConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -102,7 +104,28 @@ public final class StatementDialects {
   protected boolean load() throws JAXBException, SAXException {
     final DatabaseType dbType = workloadConfiguration.getDatabaseType();
 
-    final String sqlDialectPath = getSQLDialectPath(dbType);
+    // !!!final removed!!!
+    String sqlDialectPath = getSQLDialectPath(dbType);
+
+    System.out.println("SQLDIALECTPATH BEFORE CHANGING: " + sqlDialectPath);
+
+    System.out.println("DB TYPE IS: " + dbType);
+
+    // ADDED
+    // Check against enum using .equals()
+    // have to readd these imports
+    // import org.apache.commons.configuration2.XMLConfiguration;
+    // import com.oltpbenchmark.DBWorkload;
+
+    if (dbType == DatabaseType.POLYPHENY) {
+      // Override only if the dialect is defined in the config
+      XMLConfiguration theXMLConfig = DBWorkload.xmlConfig;
+      String overridePath = theXMLConfig.getString("dialect", null);
+      System.out.println("OVVERRIDEPATH IS: " + overridePath);
+      if (overridePath != null) {
+        sqlDialectPath = overridePath;
+      }
+    }
 
     if (sqlDialectPath == null) {
       LOG.debug("SKIP - No SQL dialect file was given.");

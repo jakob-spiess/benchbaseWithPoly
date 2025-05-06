@@ -51,6 +51,8 @@ public class DBWorkload {
   private static final String RATE_DISABLED = "disabled";
   private static final String RATE_UNLIMITED = "unlimited";
 
+  public static XMLConfiguration xmlConfig;
+
   /**
    * @param args
    * @throws Exception
@@ -115,7 +117,7 @@ public class DBWorkload {
 
     String configFile = argsLine.getOptionValue("c");
 
-    XMLConfiguration xmlConfig = buildConfiguration(configFile);
+    xmlConfig = buildConfiguration(configFile);
 
     // Load the configuration for each benchmark
     int lastTxnId = 0;
@@ -198,9 +200,11 @@ public class DBWorkload {
         throw new ParseException("Plugin " + plugin + " is undefined in config/plugin.xml");
       }
 
+      System.out.println("RUNS TO HERE!");
       BenchmarkModule bench =
           ClassUtil.newInstance(
               classname, new Object[] {wrkld}, new Class<?>[] {WorkloadConfiguration.class});
+      System.out.println("DOESN'T RUN TO HERE");
       Map<String, Object> initDebug = new ListOrderedMap<>();
       initDebug.put("Benchmark", String.format("%s {%s}", plugin.toUpperCase(), classname));
       initDebug.put("Configuration", configFile);
