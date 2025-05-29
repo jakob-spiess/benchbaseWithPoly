@@ -24,8 +24,12 @@
     <!--<ddlFileName>src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlFileName>-->
     <!--<ddl>/home/jakob/benchbaseWithPoly/src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddl>-->
 
+
+
     <ddlpath>src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlpath>
-    <dialect>src/main/resources/benchmarks/tpcc/dialect-polypheny.xml</dialect>
+    <!--<dialect>src/main/resources/benchmarks/tpcc/dialect-polypheny.xml</dialect>-->
+
+
 
     <!-- **HERE** you tell it where to pick up the dialect overrides: -->
     <!--<dialectFileName>src/main/resources/benchmarks/tpcc/dialect-polypheny.sql</dialectFileName>-->

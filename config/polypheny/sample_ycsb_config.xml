@@ -27,7 +27,7 @@
         <work>
             <time>60</time>
             <rate>10000</rate>
-            <weights>50,5,15,10,10,10</weights>
+            <weights>50,5,15,10,0,10,10</weights>
         </work>
     </works>
 
@@ -50,6 +50,9 @@
         </transactiontype>
         <transactiontype>
             <name>ReadModifyWriteRecord</name>
+        </transactiontype>
+        <transactiontype>
+            <name>DeleteRecordMQL</name>
         </transactiontype>
     </transactiontypes>
 </parameters>

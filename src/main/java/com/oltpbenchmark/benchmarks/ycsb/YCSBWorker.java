@@ -52,6 +52,7 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
   private final ReadModifyWriteRecord procReadModifyWriteRecord;
   private final InsertRecord procInsertRecord;
   private final DeleteRecord procDeleteRecord;
+  private final DeleteRecordMQL procDeleteRecordMQL;
 
   public YCSBWorker(YCSBBenchmark benchmarkModule, int id, int init_record_count) {
     super(benchmarkModule, id);
@@ -77,6 +78,7 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
     this.procReadModifyWriteRecord = this.getProcedure(ReadModifyWriteRecord.class);
     this.procInsertRecord = this.getProcedure(InsertRecord.class);
     this.procDeleteRecord = this.getProcedure(DeleteRecord.class);
+    this.procDeleteRecordMQL = this.getProcedure(DeleteRecordMQL.class);
   }
 
   @Override
@@ -86,6 +88,8 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
 
     if (procClass.equals(DeleteRecord.class)) {
       deleteRecord(conn);
+    } else if (procClass.equals(DeleteRecordMQL.class)) {
+      deleteRecordMQL(conn);
     } else if (procClass.equals(InsertRecord.class)) {
       insertRecord(conn);
     } else if (procClass.equals(ReadModifyWriteRecord.class)) {
@@ -132,6 +136,11 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
   private void deleteRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
     this.procDeleteRecord.run(conn, keyname);
+  }
+
+  private void deleteRecordMQL(Connection conn) throws SQLException {
+    int keyname = readRecord.nextInt();
+    this.procDeleteRecordMQL.run(conn, keyname);
   }
 
   private void buildParameters() {

@@ -37,7 +37,8 @@ import jakarta.xml.bind.annotation.*;
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
  *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
- *     &lt;/extension>
+ *      &lt;attribute name="language" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ * &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
  * </pre>
@@ -52,6 +53,9 @@ public class StatementType {
 
   @XmlAttribute(required = true)
   protected String name;
+
+  @XmlAttribute(required = false)
+  protected String language;
 
   /**
    * Gets the value of the value property.
@@ -87,5 +91,9 @@ public class StatementType {
    */
   public void setName(String value) {
     this.name = value;
+  }
+
+  public void setLanguage(String value) {
+    this.language = value;
   }
 }
