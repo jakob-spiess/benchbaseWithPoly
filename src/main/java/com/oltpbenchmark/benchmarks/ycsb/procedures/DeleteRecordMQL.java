@@ -36,10 +36,11 @@ public class DeleteRecordMQL extends Procedure {
 
   public void run(Connection conn, int keyname) throws SQLException {
 
-    // use ycsb;
+    // use correct namespace, hoping/assuming that that namespace is "public"
 
     // Manually build the MQL query string
-    String query = "db.getCollection(\"usertable\").deleteOne({ YCSB_KEY: " + keyname + " })";
+    // String query = "db.getCollection(\"usertable\").deleteOne({ YCSB_KEY: " + keyname + " })";
+    String query = "db.usertable.deleteOne({ YCSB_KEY: " + keyname + " })";
     System.out.println("MQL delete: " + query);
 
     try (Connection connection =
@@ -49,6 +50,8 @@ public class DeleteRecordMQL extends Procedure {
         PolyStatement polyStatement = polyConnection.createPolyStatement();
 
         // You can now use polyStatement to execute multi-model queries...
+        // DocumentResult firstResult =
+        //    polyStatement.execute("public", "mongo", "use public").unwrap(DocumentResult.class);
         DocumentResult result =
             polyStatement.execute("public", "mongo", query).unwrap(DocumentResult.class);
       }
