@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Calendar;
 
 public class Q5 extends GenericQuery {
 
@@ -50,7 +51,7 @@ public class Q5 extends GenericQuery {
                AND n_regionkey = r_regionkey
                AND r_name = ?
                AND o_orderdate >= DATE ?
-               AND o_orderdate < DATE ? + INTERVAL '1' YEAR
+               AND o_orderdate < ?
             GROUP BY
                n_name
             ORDER BY
@@ -60,15 +61,23 @@ public class Q5 extends GenericQuery {
   @Override
   protected PreparedStatement getStatement(
       Connection conn, RandomGenerator rand, double scaleFactor) throws SQLException {
+
     String region = TPCHUtil.choice(TPCHConstants.R_NAME, rand);
 
     int year = rand.number(1993, 1997);
-    String date = String.format("%d-01-01", year);
+    String dateStr = String.format("%d-01-01", year);
+
+    Date startDate = Date.valueOf(dateStr);
+
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.setTime(startDate);
+    cal.add(Calendar.YEAR, 1);
+    Date endDate = new Date(cal.getTimeInMillis());
 
     PreparedStatement stmt = this.getPreparedStatement(conn, query_stmt);
     stmt.setString(1, region);
-    stmt.setDate(2, Date.valueOf(date));
-    stmt.setDate(3, Date.valueOf(date));
+    stmt.setDate(2, startDate);
+    stmt.setDate(3, endDate);
     return stmt;
   }
 }

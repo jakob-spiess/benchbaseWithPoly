@@ -44,8 +44,8 @@ public class Q14 extends GenericQuery {
                lineitem, part
             WHERE
                l_partkey = p_partkey
-               AND l_shipdate >= DATE ?
-               AND l_shipdate < DATE ? + INTERVAL '1' MONTH
+               AND l_shipdate >= ?
+               AND l_shipdate < ?
             """);
 
   @Override
@@ -56,9 +56,15 @@ public class Q14 extends GenericQuery {
     int month = rand.number(1, 12);
     String date = String.format("%d-%02d-01", year, month);
 
+    Date startDate = Date.valueOf(date);
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.setTime(startDate);
+    cal.add(java.util.Calendar.MONTH, 1);
+    Date endDate = new Date(cal.getTimeInMillis());
+
     PreparedStatement stmt = this.getPreparedStatement(conn, query_stmt);
-    stmt.setDate(1, Date.valueOf(date));
-    stmt.setDate(2, Date.valueOf(date));
+    stmt.setDate(1, startDate);
+    stmt.setDate(2, endDate);
     return stmt;
   }
 }
