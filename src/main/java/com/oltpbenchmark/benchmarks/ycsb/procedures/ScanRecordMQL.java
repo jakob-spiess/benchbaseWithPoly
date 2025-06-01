@@ -35,7 +35,7 @@ public class ScanRecordMQL extends Procedure {
 
         for (int key = start; key < start + count; key++) {
           String query = "db.usertable.findOne({ YCSB_KEY: " + key + " })";
-          System.out.println("MQL scan: " + query);
+          // System.out.println("MQL scan: " + query);
 
           try {
             DocumentResult result =

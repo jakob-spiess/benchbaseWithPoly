@@ -47,12 +47,17 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
   private final String[] results = new String[YCSBConstants.NUM_FIELDS];
 
   private final UpdateRecord procUpdateRecord;
+  private final UpdateRecordMQL procUpdateRecordMQL;
   private final ScanRecord procScanRecord;
+  private final ScanRecordMQL procScanRecordMQL;
   private final ReadRecord procReadRecord;
   private final ReadModifyWriteRecord procReadModifyWriteRecord;
   private final InsertRecord procInsertRecord;
+  private final InsertRecordMQL procInsertRecordMQL;
   private final DeleteRecord procDeleteRecord;
   private final DeleteRecordMQL procDeleteRecordMQL;
+  private final ReadRecordMQL procReadRecordMQL;
+  private final ReadRecordCypher procReadRecordCypher;
 
   public YCSBWorker(YCSBBenchmark benchmarkModule, int id, int init_record_count) {
     super(benchmarkModule, id);
@@ -73,12 +78,17 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
     // everytime we want to execute a txn. This is important to do on
     // a client machine with not a lot of cores
     this.procUpdateRecord = this.getProcedure(UpdateRecord.class);
+    this.procUpdateRecordMQL = this.getProcedure(UpdateRecordMQL.class);
     this.procScanRecord = this.getProcedure(ScanRecord.class);
+    this.procScanRecordMQL = this.getProcedure(ScanRecordMQL.class);
     this.procReadRecord = this.getProcedure(ReadRecord.class);
     this.procReadModifyWriteRecord = this.getProcedure(ReadModifyWriteRecord.class);
     this.procInsertRecord = this.getProcedure(InsertRecord.class);
+    this.procInsertRecordMQL = this.getProcedure(InsertRecordMQL.class);
     this.procDeleteRecord = this.getProcedure(DeleteRecord.class);
     this.procDeleteRecordMQL = this.getProcedure(DeleteRecordMQL.class);
+    this.procReadRecordMQL = this.getProcedure(ReadRecordMQL.class);
+    this.procReadRecordCypher = this.getProcedure(ReadRecordCypher.class);
   }
 
   @Override
@@ -90,24 +100,32 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
       deleteRecord(conn);
     } else if (procClass.equals(DeleteRecordMQL.class)) {
       deleteRecordMQL(conn);
+    } else if (procClass.equals(ReadRecordMQL.class)) {
+      readRecordMQL(conn);
+    } else if (procClass.equals(ReadRecordCypher.class)) {
+      readRecordCypher(conn);
     } else if (procClass.equals(InsertRecord.class)) {
       insertRecord(conn);
+    } else if (procClass.equals(InsertRecordMQL.class)) {
+      insertRecordMQL(conn);
     } else if (procClass.equals(ReadModifyWriteRecord.class)) {
       readModifyWriteRecord(conn);
     } else if (procClass.equals(ReadRecord.class)) {
       readRecord(conn);
     } else if (procClass.equals(ScanRecord.class)) {
       scanRecord(conn);
-    } else if (procClass.equals(UpdateRecord.class)) {
-      updateRecord(conn);
+    } else if (procClass.equals(ScanRecordMQL.class)) {
+      scanRecordMQL(conn);
+    } else if (procClass.equals(UpdateRecordMQL.class)) {
+      updateRecordMQL(conn);
     }
     return (TransactionStatus.SUCCESS);
   }
 
-  private void updateRecord(Connection conn) throws SQLException {
+  private void updateRecordMQL(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
     this.buildParameters();
-    this.procUpdateRecord.run(conn, keyname, this.params);
+    this.procUpdateRecordMQL.run(conn, keyname, this.params);
   }
 
   private void scanRecord(Connection conn) throws SQLException {
@@ -116,9 +134,25 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
     this.procScanRecord.run(conn, keyname, count, new ArrayList<>());
   }
 
+  private void scanRecordMQL(Connection conn) throws SQLException {
+    int keyname = readRecord.nextInt();
+    int count = randScan.nextInt();
+    this.procScanRecordMQL.run(conn, keyname, count, new ArrayList<>());
+  }
+
   private void readRecord(Connection conn) throws SQLException {
     int keyname = readRecord.nextInt();
     this.procReadRecord.run(conn, keyname, this.results);
+  }
+
+  private void readRecordMQL(Connection conn) throws SQLException {
+    int keyname = readRecord.nextInt();
+    this.procReadRecordMQL.run(conn, keyname, this.results);
+  }
+
+  private void readRecordCypher(Connection conn) throws SQLException {
+    int keyname = readRecord.nextInt();
+    this.procReadRecordCypher.run(conn, keyname, this.results);
   }
 
   private void readModifyWriteRecord(Connection conn) throws SQLException {
@@ -131,6 +165,12 @@ class YCSBWorker extends Worker<YCSBBenchmark> {
     int keyname = insertRecord.nextInt();
     this.buildParameters();
     this.procInsertRecord.run(conn, keyname, this.params);
+  }
+
+  private void insertRecordMQL(Connection conn) throws SQLException {
+    int keyname = insertRecord.nextInt();
+    this.buildParameters();
+    this.procInsertRecordMQL.run(conn, keyname, this.params);
   }
 
   private void deleteRecord(Connection conn) throws SQLException {

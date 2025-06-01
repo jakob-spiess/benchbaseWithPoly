@@ -7,12 +7,49 @@
             </statement>
         </procedure>
 
-        <procedure name="DeleteRecordMQL">
-            <statement name="deleteStmtMQL" language="mql">
+        <!--<procedure name="DeleteRecordMQL">-->
+            <!-- <statement name="deleteStmtMQL" language="mql"> -->
+                <!-- db.getCollection("usertable").deleteOne({ YCSB_KEY: ? }) -->
+                <!--DELETE FROM usertable WHERE YCSB_KEY = ${YCSB_KEY}-->
+                <!-- Since that ? syntax is not supported just look at the java file-->
+            <!--</statement>-->
+        <!--</procedure>-->
+
+        <procedure name="ReadRecordMQL">
+            <statement name="readStmtMQL" language="mql">
                 <!-- db.getCollection("usertable").deleteOne({ YCSB_KEY: ? }) -->
                 <!--DELETE FROM usertable WHERE YCSB_KEY = ${YCSB_KEY}-->
                 <!-- Since that ? syntax is not supported just look at the java file-->
             </statement>
         </procedure>
+
+        <!--<procedure name="InsertRecordMQL">-->
+            <!--<statement name="insertStmtMQL" language="mql">-->
+                <!-- db.getCollection("usertable").deleteOne({ YCSB_KEY: ? }) -->
+                <!--DELETE FROM usertable WHERE YCSB_KEY = ${YCSB_KEY}-->
+                <!-- Since that ? syntax is not supported just look at the java file-->
+            <!--</statement>-->
+        <!--</procedure>-->
+
+        <procedure name="ScanRecordMQL">
+            <statement name="scanStmtMQL" language="mql">
+            </statement>
+        </procedure>
+
+        <!--<procedure name="UpdateRecordMQL">-->
+            <!--<statement name="updateAllStmtMQL" language="mql">-->
+            <!--</statement>-->
+        <!--</procedure>-->
+
+        <!--<procedure name="ReadModifyWriteRecordMQL">-->
+            <!--<statement name="updateAllStmtMQL" language="mql">-->
+            <!--</statement>-->
+        <!--</procedure>-->
+
+        <!--<procedure name="ReadRecordCypher">-->
+            <!--<statement name="readStmtCypher" language="mql">-->
+
+            <!--</statement>-->
+        <!--</procedure>-->
     </dialect>
 </dialects>
