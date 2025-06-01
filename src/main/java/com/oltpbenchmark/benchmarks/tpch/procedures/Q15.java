@@ -20,7 +20,6 @@ package com.oltpbenchmark.benchmarks.tpch.procedures;
 import com.oltpbenchmark.api.SQLStmt;
 import com.oltpbenchmark.util.RandomGenerator;
 import java.sql.*;
-import java.time.LocalDate;
 
 public class Q15 extends GenericQuery {
 
@@ -73,30 +72,44 @@ public class Q15 extends GenericQuery {
 
   @Override
   public void run(Connection conn, RandomGenerator rand, double scaleFactor) throws SQLException {
-    // With this query, we have to set up a view before we execute the
-    // query, then drop it once we're done.
+    // With this query, we have to set up a view before we execute the query, then drop it once
+    // we're done.
     try (Statement stmt = conn.createStatement()) {
       try {
+        // Drop the view if it exists
         stmt.execute(dropview_stmt.getSQL());
-        // DATE is the first day of a randomly selected month between
-        // the first month of 1993 and the 10th month of 1997
+
+        // Generate random date range (3 months)
         int year = rand.number(1993, 1997);
         int month = rand.number(1, year == 1997 ? 10 : 12);
-        String startDate = String.format("%d-%02d-01", year, month);
-        String endDate = Date.valueOf(LocalDate.parse(startDate).plusMonths(3)).toString();
+        String dateStr = String.format("%d-%02d-01", year, month);
 
-        String viewSQL = String.format(createview_stmt.getSQL(), startDate, endDate);
+        Date startDate = Date.valueOf(dateStr);
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(startDate);
+        cal.add(java.util.Calendar.MONTH, 3);
+        Date endDate = new Date(cal.getTimeInMillis());
+
+        // Format the CREATE VIEW SQL with actual dates
+        String viewSQL =
+            String.format(createview_stmt.getSQL(), startDate.toString(), endDate.toString());
         System.out.println("Executing VIEW SQL:\n" + viewSQL);
         System.out.println("Executing QUERY SQL:\n" + query_stmt.getSQL());
+
         try {
+          // Use regular Statement to execute CREATE VIEW
           stmt.execute(viewSQL);
         } catch (SQLException e) {
           System.err.println("Failed to create view revenue0:");
           e.printStackTrace();
           throw e;
         }
+
+        // Now run the actual query
         super.run(conn, rand, scaleFactor);
+
       } finally {
+        // Clean up view
         stmt.execute(dropview_stmt.getSQL());
       }
     }
