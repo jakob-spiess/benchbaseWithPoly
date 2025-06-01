@@ -30,32 +30,31 @@ public class Q17 extends GenericQuery {
   public final SQLStmt query_stmt =
       new SQLStmt(
           """
-            SELECT
-               SUM(l_extendedprice) / 7.0 AS avg_yearly
-            FROM
-               lineitem,
-               part
-            WHERE
-               p_partkey = l_partkey
-               AND p_brand = ?
-               AND p_container = ?
-               AND l_quantity < (
-               SELECT
-                  0.2 * AVG(l_quantity)
-               FROM
-                  lineitem
-               WHERE
-                  l_partkey = p_partkey )
-            """);
+      WITH avg_quantity AS (
+        SELECT
+          l_partkey,
+          0.2 * AVG(l_quantity) AS threshold
+        FROM
+          lineitem
+        GROUP BY
+          l_partkey
+      )
+      SELECT
+        SUM(l_extendedprice) / 7.0 AS avg_yearly
+      FROM
+        lineitem
+        JOIN part ON p_partkey = l_partkey
+        JOIN avg_quantity ON avg_quantity.l_partkey = lineitem.l_partkey
+      WHERE
+        p_brand = ?
+        AND p_container = ?
+        AND l_quantity < avg_quantity.threshold
+      """);
 
   @Override
   protected PreparedStatement getStatement(
       Connection conn, RandomGenerator rand, double scaleFactor) throws SQLException {
     String brand = TPCHUtil.randomBrand(rand);
-
-    // CONTAINER is randomly selected within the list of 2-syllable strings defined for Containers
-    // in Clause
-    // 4.2.2.13
     String containerS1 = TPCHUtil.choice(TPCHConstants.CONTAINERS_S1, rand);
     String containerS2 = TPCHUtil.choice(TPCHConstants.CONTAINERS_S2, rand);
     String container = String.format("%s %s", containerS1, containerS2);

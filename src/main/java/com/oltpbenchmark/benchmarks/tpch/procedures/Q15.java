@@ -19,10 +19,7 @@ package com.oltpbenchmark.benchmarks.tpch.procedures;
 
 import com.oltpbenchmark.api.SQLStmt;
 import com.oltpbenchmark.util.RandomGenerator;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class Q15 extends GenericQuery {
 
@@ -32,12 +29,13 @@ public class Q15 extends GenericQuery {
             CREATE view revenue0 (supplier_no, total_revenue) AS
             SELECT
                l_suppkey,
-               SUM(l_extendedprice * (1 - l_discount))
+               CAST(SUM(l_extendedprice * (1.00 - l_discount)) AS DOUBLE)
+
             FROM
                lineitem
             WHERE
-               l_shipdate >= DATE ?
-               AND l_shipdate < DATE ? + INTERVAL '3' MONTH
+               l_shipdate >= DATE '%s'
+               AND l_shipdate < DATE '%s'
             GROUP BY
                l_suppkey
             """);
@@ -69,28 +67,50 @@ public class Q15 extends GenericQuery {
   public final SQLStmt dropview_stmt =
       new SQLStmt(
           """
-            DROP VIEW revenue0
+            DROP VIEW IF EXISTS revenue0
             """);
 
   @Override
   public void run(Connection conn, RandomGenerator rand, double scaleFactor) throws SQLException {
-    // With this query, we have to set up a view before we execute the
-    // query, then drop it once we're done.
+    // With this query, we have to set up a view before we execute the query, then drop it once
+    // we're done.
     try (Statement stmt = conn.createStatement()) {
       try {
-        // DATE is the first day of a randomly selected month between
-        // the first month of 1993 and the 10th month of 1997
+        // Drop the view if it exists
+        stmt.execute(dropview_stmt.getSQL());
+
+        // Generate random date range (3 months)
         int year = rand.number(1993, 1997);
         int month = rand.number(1, year == 1997 ? 10 : 12);
-        String date = String.format("%d-%02d-01", year, month);
+        String dateStr = String.format("%d-%02d-01", year, month);
 
-        String sql = createview_stmt.getSQL();
-        sql = sql.replace("?", String.format("'%s'", date));
-        stmt.execute(sql);
+        Date startDate = Date.valueOf(dateStr);
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(startDate);
+        cal.add(java.util.Calendar.MONTH, 3);
+        Date endDate = new Date(cal.getTimeInMillis());
+
+        // Format the CREATE VIEW SQL with actual dates
+        String viewSQL =
+            String.format(createview_stmt.getSQL(), startDate.toString(), endDate.toString());
+        System.out.println("Executing VIEW SQL:\n" + viewSQL);
+        System.out.println("Executing QUERY SQL:\n" + query_stmt.getSQL());
+
+        try {
+          // Use regular Statement to execute CREATE VIEW
+          stmt.execute(viewSQL);
+        } catch (SQLException e) {
+          System.err.println("Failed to create view revenue0:");
+          e.printStackTrace();
+          throw e;
+        }
+
+        // Now run the actual query
         super.run(conn, rand, scaleFactor);
+
       } finally {
-        String sql = dropview_stmt.getSQL();
-        stmt.execute(sql);
+        // Clean up view
+        stmt.execute(dropview_stmt.getSQL());
       }
     }
   }

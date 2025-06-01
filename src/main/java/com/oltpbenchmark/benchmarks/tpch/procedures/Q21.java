@@ -31,46 +31,37 @@ public class Q21 extends GenericQuery {
       new SQLStmt(
           """
             SELECT
-               s_name,
-               COUNT(*) AS numwait
-            FROM
-               supplier,
-               lineitem l1,
-               orders,
-               nation
-            WHERE
-               s_suppkey = l1.l_suppkey
-               AND o_orderkey = l1.l_orderkey
-               AND o_orderstatus = 'F'
-               AND l1.l_receiptdate > l1.l_commitdate
-               AND EXISTS
-               (
-                  SELECT
-                     *
-                  FROM
-                     lineitem l2
-                  WHERE
-                     l2.l_orderkey = l1.l_orderkey
-                     AND l2.l_suppkey <> l1.l_suppkey
-               )
-               AND NOT EXISTS
-               (
-                  SELECT
-                     *
-                  FROM
-                     lineitem l3
-                  WHERE
-                     l3.l_orderkey = l1.l_orderkey
-                     AND l3.l_suppkey <> l1.l_suppkey
-                     AND l3.l_receiptdate > l3.l_commitdate
-               )
-               AND s_nationkey = n_nationkey
-               AND n_name = ?
-            GROUP BY
-               s_name
-            ORDER BY
-               numwait DESC,
-               s_name LIMIT 100
+                                  s_name,
+                                  COUNT(*) AS numwait
+                               FROM
+                                  supplier
+                               JOIN lineitem l1 ON s_suppkey = l1.l_suppkey
+                               JOIN orders o ON o.o_orderkey = l1.l_orderkey
+                               JOIN nation n ON s_nationkey = n.n_nationkey
+                               WHERE
+                                  o.o_orderstatus = 'F'
+                                  AND l1.l_receiptdate > l1.l_commitdate
+                                  AND EXISTS (
+                                      SELECT 1
+                                      FROM lineitem l2
+                                      WHERE l2.l_orderkey = l1.l_orderkey
+                                        AND l2.l_suppkey <> l1.l_suppkey
+                                  )
+                                  AND NOT EXISTS (
+                                      SELECT 1
+                                      FROM lineitem l3
+                                      WHERE l3.l_orderkey = l1.l_orderkey
+                                        AND l3.l_suppkey <> l1.l_suppkey
+                                        AND l3.l_receiptdate > l3.l_commitdate
+                                  )
+                                  AND n.n_name = ?
+                               GROUP BY
+                                  s_name
+                               ORDER BY
+                                  numwait DESC,
+                                  s_name
+                               LIMIT 100;
+
             """);
 
   @Override

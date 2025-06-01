@@ -34,6 +34,8 @@ public class Column extends AbstractCatalogObject {
 
   private Column foreignKey = null;
 
+  private boolean isIndexed = false;
+
   public Column(
       String name, String separator, Table table, int type, Integer size, boolean nullable) {
     super(name, separator);
@@ -69,6 +71,14 @@ public class Column extends AbstractCatalogObject {
 
   public int getIndex() {
     return this.table.getColumnIndex(this);
+  }
+
+  public void markAsIndexed() {
+    this.isIndexed = true;
+  }
+
+  public boolean isIndexed() {
+    return isIndexed;
   }
 
   @Override
