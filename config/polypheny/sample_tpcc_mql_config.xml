@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<parameters>
+
+    <!-- Connection details -->
+    <type>POLYPHENY</type>
+    <driver>org.polypheny.jdbc.PolyphenyDriver</driver>
+    <!--
+      You can include a schema in your URL if desired (e.g. /public),
+      or leave it off to use the default for your user.
+    -->
+    <!--<url>jdbc:polypheny://localhost:20590</url>-->
+    <url>jdbc:polypheny://localhost:20590/public</url>
+    <username>pa</username>
+    <password></password>
+    <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
+    <!-- TPCC really needs serializability to avoid order‐ID races -->
+    <isolation>TRANSACTION_READ_COMMITTED</isolation>
+    <batchsize>128</batchsize>
+
+    <!--
+      Path to your Polypheny TPCC DDL.
+      Adjust this relative path to wherever you’ve got ddl‐tpcc‐polypheny.sql
+    -->
+    <!--<ddlFileName>src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlFileName>-->
+    <!--<ddl>/home/jakob/benchbaseWithPoly/src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddl>-->
+
+    <ddlpath>../../src/main/resources/benchmarks/tpcc/ddl-polypheny.sql</ddlpath>
+    <dialect>../../src/main/resources/benchmarks/tpcc/dialect-polypheny.xml</dialect>
+
+    <!-- **HERE** you tell it where to pick up the dialect overrides: -->
+    <!--<dialectFileName>src/main/resources/benchmarks/tpcc/dialect-polypheny.sql</dialectFileName>-->
+
+    <!-- Scale factor = number of warehouses in TPCC -->
+    <scalefactor>1</scalefactor>
+
+    <!-- Number of concurrent clients ("terminals") -->
+    <terminals>1</terminals>
+
+    <works>
+        <work>
+            <!-- Total runtime in seconds -->
+            <time>300</time>
+            <!-- Target aggregate txn/sec across all terminals -->
+            <rate>100</rate>
+            <!-- Weights: NewOrder, Payment, OrderStatus, Delivery, StockLevel -->
+            <weights>45,43,4,4,4</weights>
+        </work>
+    </works>
+
+    <!-- TPCC transaction mix -->
+    <transactiontypes>
+        <transactiontype>
+            <name>NewOrderMQL</name>
+        </transactiontype>
+        <transactiontype>
+            <name>Payment</name>
+        </transactiontype>
+        <transactiontype>
+            <name>OrderStatus</name>
+        </transactiontype>
+        <transactiontype>
+            <name>Delivery</name>
+        </transactiontype>
+        <transactiontype>
+            <name>StockLevel</name>
+        </transactiontype>
+    </transactiontypes>
+
+</parameters>

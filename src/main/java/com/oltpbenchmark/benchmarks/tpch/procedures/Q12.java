@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Calendar;
 
 public class Q12 extends GenericQuery {
 
@@ -61,8 +62,8 @@ public class Q12 extends GenericQuery {
                 AND l_shipmode IN (?, ?)
                 AND l_commitdate < l_receiptdate
                 AND l_shipdate < l_commitdate
-                AND l_receiptdate >= DATE ?
-                AND l_receiptdate < DATE ? + INTERVAL '1' YEAR
+                AND l_receiptdate >= ?
+                AND l_receiptdate < ?
             GROUP BY
                 l_shipmode
             ORDER BY
@@ -87,11 +88,17 @@ public class Q12 extends GenericQuery {
     int year = rand.number(1993, 1997);
     String date = String.format("%d-01-01", year);
 
+    Date startDate = Date.valueOf(date);
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.setTime(startDate);
+    cal.add(Calendar.YEAR, 1);
+    Date endDate = new Date(cal.getTimeInMillis());
+
     PreparedStatement stmt = this.getPreparedStatement(conn, query_stmt);
     stmt.setString(1, shipMode1);
     stmt.setString(2, shipMode2);
-    stmt.setDate(3, Date.valueOf(date));
-    stmt.setDate(4, Date.valueOf(date));
+    stmt.setDate(3, startDate);
+    stmt.setDate(4, endDate);
     return stmt;
   }
 }

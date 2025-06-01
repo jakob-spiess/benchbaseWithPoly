@@ -1,0 +1,631 @@
+<?xml version="1.0"?>
+<dialects>
+    <dialect type="POLYPHENY">
+
+
+        <procedure name="Q1">
+            <statement name="query_stmt">
+                db.lineitem.aggregate([
+                {
+                $match: {
+                l_shipdate: { $lte: new Date("1998-09-02") }
+                }
+                },
+                {
+                $group: {
+                _id: {
+                l_returnflag: "$l_returnflag",
+                l_linestatus: "$l_linestatus"
+                },
+                sum_qty: { $sum: "$l_quantity" },
+                sum_base_price: { $sum: "$l_extendedprice" },
+                sum_disc_price: {
+                $sum: {
+                $multiply: [
+                "$l_extendedprice",
+                { $subtract: [1, "$l_discount"] }
+                ]
+                }
+                },
+                sum_charge: {
+                $sum: {
+                $multiply: [
+                "$l_extendedprice",
+                { $subtract: [1, "$l_discount"] },
+                { $add: [1, "$l_tax"] }
+                ]
+                }
+                },
+                avg_qty: { $avg: "$l_quantity" },
+                avg_price: { $avg: "$l_extendedprice" },
+                avg_disc: { $avg: "$l_discount" },
+                count_order: { $sum: 1 }
+                }
+                },
+                {
+                $sort: {
+                "_id.l_returnflag": 1,
+                "_id.l_linestatus": 1
+                }
+                },
+                {
+                $project: {
+                _id: 0,
+                l_returnflag: "$_id.l_returnflag",
+                l_linestatus: "$_id.l_linestatus",
+                sum_qty: 1,
+                sum_base_price: 1,
+                sum_disc_price: 1,
+                sum_charge: 1,
+                avg_qty: 1,
+                avg_price: 1,
+                avg_disc: 1,
+                count_order: 1
+                }
+                }
+                ])
+
+            </statement>
+        </procedure>
+
+        <procedure name="Q2MQL">
+            <statement name="query_stmt">
+                db.partsupp.aggregate([
+                {
+                $lookup: {
+                from: "part",
+                localField: "ps_partkey",
+                foreignField: "p_partkey",
+                as: "part"
+                }
+                },
+                { $unwind: "$part" },
+                {
+                $lookup: {
+                from: "supplier",
+                localField: "ps_suppkey",
+                foreignField: "s_suppkey",
+                as: "supplier"
+                }
+                },
+                { $unwind: "$supplier" },
+                {
+                $lookup: {
+                from: "nation",
+                localField: "supplier.s_nationkey",
+                foreignField: "n_nationkey",
+                as: "nation"
+                }
+                },
+                { $unwind: "$nation" },
+                {
+                $lookup: {
+                from: "region",
+                localField: "nation.n_regionkey",
+                foreignField: "r_regionkey",
+                as: "region"
+                }
+                },
+                { $unwind: "$region" },
+                {
+                $match: {
+                "part.p_size": ?,
+                "part.p_type": { $regex: ?, $options: "i" },
+                "region.r_name": ?
+                }
+                },
+                {
+                $lookup: {
+                from: "min_cost_partsupp",
+                localField: "ps_partkey",
+                foreignField: "ps_partkey",
+                as: "min_cost"
+                }
+                },
+                { $unwind: "$min_cost" },
+                {
+                $match: {
+                $expr: {
+                $eq: ["$ps_supplycost", "$min_cost.min_supplycost"]
+                }
+                }
+                },
+                {
+                $project: {
+                _id: 0,
+                s_acctbal: "$supplier.s_acctbal",
+                s_name: "$supplier.s_name",
+                n_name: "$nation.n_name",
+                p_partkey: "$part.p_partkey",
+                p_mfgr: "$part.p_mfgr",
+                s_address: "$supplier.s_address",
+                s_phone: "$supplier.s_phone",
+                s_comment: "$supplier.s_comment"
+                }
+                },
+                {
+                $sort: {
+                s_acctbal: -1,
+                n_name: 1,
+                s_name: 1,
+                p_partkey: 1
+                }
+                },
+                { $limit: 100 }
+                ])
+            </statement>
+        </procedure>
+
+
+        <procedure name="Q3MQL">
+            <statement name="query_stmt" language = "mql">
+
+            </statement>
+        </procedure>
+
+
+        <procedure name="Q4">
+            <statement name="query_stmt">
+                SELECT
+                o_orderpriority,
+                COUNT(*) AS order_count
+                FROM
+                orders
+                WHERE
+                o_orderdate &gt;= ?
+                AND o_orderdate &lt; ?
+                AND EXISTS (
+                SELECT
+                *
+                FROM
+                lineitem
+                WHERE
+                l_orderkey = o_orderkey
+                AND l_commitdate &lt; l_receiptdate
+                )
+                GROUP BY
+                o_orderpriority
+                ORDER BY
+                o_orderpriority
+            </statement>
+
+        </procedure>
+        <procedure name="Q5">
+            <statement name="query_stmt">
+                SELECT
+                n_name,
+                SUM(l_extendedprice * (1 - l_discount)) AS revenue
+                FROM
+                region
+                JOIN nation ON region.r_regionkey = nation.n_regionkey
+                JOIN customer ON customer.c_nationkey = nation.n_nationkey
+                JOIN orders ON customer.c_custkey = orders.o_custkey
+                JOIN lineitem ON lineitem.l_orderkey = orders.o_orderkey
+                JOIN supplier ON lineitem.l_suppkey = supplier.s_suppkey
+                WHERE
+                region.r_name = ?
+                AND orders.o_orderdate &gt;= ?
+                AND orders.o_orderdate &lt; ?
+                GROUP BY
+                n_name
+                ORDER BY
+                revenue DESC
+            </statement>
+        </procedure>
+
+        <procedure name="Q6">
+            <statement name="query_stmt">
+                SELECT
+                SUM(l_extendedprice * l_discount) AS revenue
+                FROM
+                lineitem
+                WHERE
+                l_shipdate &gt;= ?
+                AND l_shipdate &lt; ?
+                AND l_discount BETWEEN ? - 0.01 AND ? + 0.01
+                AND l_quantity &lt; ?
+            </statement>
+        </procedure>
+        <procedure name="Q7">
+            <statement name="query_stmt">
+                SELECT
+                supp_nation,
+                cust_nation,
+                l_year,
+                SUM(volume) AS revenue
+                FROM (
+                SELECT
+                n1.n_name AS supp_nation,
+                n2.n_name AS cust_nation,
+                EXTRACT(YEAR FROM l_shipdate) AS l_year,
+                l_extendedprice * (1 - l_discount) AS volume
+                FROM
+                lineitem
+                JOIN supplier ON l_suppkey = s_suppkey
+                JOIN orders ON l_orderkey = o_orderkey
+                JOIN customer ON o_custkey = c_custkey
+                JOIN nation n1 ON s_nationkey = n1.n_nationkey
+                JOIN nation n2 ON c_nationkey = n2.n_nationkey
+                WHERE
+                (
+                (n1.n_name = ? AND n2.n_name = ?)
+                OR
+                (n1.n_name = ? AND n2.n_name = ?)
+                )
+                AND l_shipdate BETWEEN DATE '1995-01-01' AND DATE '1996-12-31'
+                ) AS shipping
+                GROUP BY
+                supp_nation,
+                cust_nation,
+                l_year
+                ORDER BY
+                supp_nation,
+                cust_nation,
+                l_year
+            </statement>
+        </procedure>
+
+        <procedure name="Q8">
+            <statement name="query_stmt">
+                SELECT o_year,
+                SUM(CASE WHEN nation = CAST(? AS VARCHAR) THEN volume ELSE 0 END) / SUM(volume) AS mkt_share
+                FROM (
+                SELECT EXTRACT(YEAR FROM o_orderdate) AS o_year,
+                l_extendedprice * (1 - l_discount) AS volume,
+                n2.n_name AS nation
+                FROM part, supplier, lineitem, orders, customer, nation n1, nation n2, region
+                WHERE p_partkey = l_partkey
+                AND s_suppkey = l_suppkey
+                AND l_orderkey = o_orderkey
+                AND o_custkey = c_custkey
+                AND c_nationkey = n1.n_nationkey
+                AND n1.n_regionkey = r_regionkey
+                AND r_name = CAST(? AS VARCHAR)
+                AND s_nationkey = n2.n_nationkey
+                AND o_orderdate BETWEEN DATE '1995-01-01' AND DATE '1996-12-31'
+                AND p_type = CAST(? AS VARCHAR)
+                ) AS all_nations
+                GROUP BY o_year
+                ORDER BY o_year
+            </statement>
+        </procedure>
+
+
+        <procedure name="Q10">
+            <statement name="query_stmt">
+                SELECT c_custkey, c_name, SUM(l_extendedprice * (1 - l_discount)) AS revenue,
+                c_acctbal, n_name, c_address, c_phone, c_comment
+                FROM customer, orders, lineitem, nation
+                WHERE c_custkey = o_custkey
+                AND l_orderkey = o_orderkey
+                AND o_orderdate &gt;= CAST(? AS DATE)
+                AND o_orderdate &lt; CAST(? AS DATE) + INTERVAL '3' MONTH
+                AND l_returnflag = 'R'
+                AND c_nationkey = n_nationkey
+                GROUP BY c_custkey, c_name, c_acctbal, c_phone, n_name, c_address, c_comment
+                ORDER BY revenue DESC
+                LIMIT 20
+            </statement>
+        </procedure>
+
+        <procedure name="Q11">
+            <statement name="query_stmt">
+                SELECT ps_partkey,
+                SUM(ps_supplycost * ps_availqty) AS total_value
+                FROM partsupp, supplier, nation
+                WHERE ps_suppkey = s_suppkey
+                AND s_nationkey = n_nationkey
+                AND n_name = ?
+                GROUP BY ps_partkey
+                HAVING SUM(ps_supplycost * ps_availqty) > (
+                SELECT SUM(ps_supplycost * ps_availqty)
+                FROM partsupp, supplier, nation
+                WHERE ps_suppkey = s_suppkey
+                AND s_nationkey = n_nationkey
+                AND n_name = ?
+                ) * ?
+                ORDER BY total_value DESC
+            </statement>
+        </procedure>
+
+
+        <procedure name="Q12">
+            <statement name="query_stmt">
+                SELECT l_shipmode,
+                SUM(CASE WHEN o_orderpriority = '1-URGENT' OR o_orderpriority = '2-HIGH' THEN 1 ELSE 0 END) AS high_line_count,
+                SUM(CASE WHEN o_orderpriority &lt;&gt; '1-URGENT' AND o_orderpriority &lt;&gt; '2-HIGH' THEN 1 ELSE 0 END) AS low_line_count
+                FROM orders, lineitem
+                WHERE o_orderkey = l_orderkey
+                AND l_shipmode IN (?, ?)
+                AND l_commitdate &lt; l_receiptdate
+                AND l_shipdate &lt; l_commitdate
+                AND l_receiptdate &gt;= ?
+                AND l_receiptdate &lt; ?
+                GROUP BY l_shipmode
+                ORDER BY l_shipmode
+            </statement>
+        </procedure>
+
+
+        <procedure name="Q14">
+            <statement name="query_stmt">
+                SELECT
+                100.00 * SUM(
+                CASE
+                WHEN p_type LIKE 'PROMO%'
+                THEN l_extendedprice * (1 - l_discount)
+                ELSE 0
+                END
+                ) / SUM(l_extendedprice * (1 - l_discount)) AS promo_revenue
+                FROM
+                lineitem, part
+                WHERE
+                l_partkey = p_partkey
+                AND l_shipdate &gt;= ?
+                AND l_shipdate &lt; ?
+            </statement>
+        </procedure>
+
+
+        <procedure name="Q15">
+            <statement name="createview_stmt">
+                <![CDATA[
+    CREATE VIEW revenue0 (supplier_no, total_revenue) AS
+    SELECT
+      l_suppkey,
+      CAST(SUM(l_extendedprice * (1.00 - l_discount)) AS DOUBLE)
+    FROM
+      lineitem
+    WHERE
+      l_shipdate >= DATE '%s'
+      AND l_shipdate < DATE '%s'
+    GROUP BY
+      l_suppkey
+  ]]>
+            </statement>
+
+
+
+            <statement name="query_stmt">
+
+                SELECT
+                s_suppkey,
+                s_name,
+                s_address,
+                s_phone,
+                total_revenue
+                FROM
+                supplier,
+                revenue0
+                WHERE
+                s_suppkey = supplier_no
+                AND total_revenue = (
+                SELECT
+                MAX(total_revenue)
+                FROM
+                revenue0
+                )
+                ORDER BY
+                s_suppkey
+
+            </statement>
+
+            <statement name="dropview_stmt">
+
+                DROP VIEW IF EXISTS revenue0
+
+            </statement>
+        </procedure>
+
+
+
+
+
+        <procedure name="Q17">
+            <statement name="query_stmt">
+                <![CDATA[
+        SELECT
+            SUM(l_extendedprice) / 7.0 AS avg_yearly
+        FROM
+            lineitem l
+            JOIN part p ON p.p_partkey = l.l_partkey
+            JOIN (
+                SELECT
+                    l_partkey,
+                    0.2 * AVG(l_quantity) AS threshold
+                FROM
+                    lineitem
+                GROUP BY
+                    l_partkey
+            ) avgq ON avgq.l_partkey = l.l_partkey
+        WHERE
+            p.p_brand = ?
+            AND p.p_container = ?
+            AND l.l_quantity < avgq.threshold
+        ]]>
+            </statement>
+        </procedure>
+
+        <procedure name="Q18">
+            <statement name="query_stmt">
+                <![CDATA[
+        SELECT
+            c.c_name,
+            c.c_custkey,
+            o.o_orderkey,
+            o.o_orderdate,
+            o.o_totalprice,
+            SUM(l.l_quantity) AS sum_qty
+        FROM
+            customer c
+            JOIN orders o ON c.c_custkey = o.o_custkey
+            JOIN lineitem l ON o.o_orderkey = l.l_orderkey
+            JOIN (
+                SELECT
+                    l_orderkey
+                FROM
+                    lineitem
+                GROUP BY
+                    l_orderkey
+                HAVING
+                    SUM(l_quantity) > ?
+            ) filtered_orders ON o.o_orderkey = filtered_orders.l_orderkey
+        GROUP BY
+            c.c_name,
+            c.c_custkey,
+            o.o_orderkey,
+            o.o_orderdate,
+            o.o_totalprice
+        ORDER BY
+            o.o_totalprice DESC,
+            o.o_orderdate
+        LIMIT 100
+        ]]>
+            </statement>
+        </procedure>
+
+        <procedure name="Q19">
+            <statement name="query_stmt">
+                SELECT SUM(revenue) AS revenue FROM (
+                SELECT
+                l_extendedprice * (1 - l_discount) AS revenue
+                FROM
+                lineitem,
+                part
+                WHERE
+                p_partkey = l_partkey
+                AND p_brand = ?
+                AND p_container IN ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG')
+                AND l_quantity &gt;= ?
+                AND l_quantity &lt;= ? + 10
+                AND p_size BETWEEN 1 AND 5
+                AND l_shipmode IN ('AIR', 'AIR REG')
+                AND l_shipinstruct = 'DELIVER IN PERSON'
+
+                UNION ALL
+
+                SELECT
+                l_extendedprice * (1 - l_discount) AS revenue
+                FROM
+                lineitem,
+                part
+                WHERE
+                p_partkey = l_partkey
+                AND p_brand = ?
+                AND p_container IN ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK')
+                AND l_quantity &gt;= ?
+                AND l_quantity &lt;= ? + 10
+                AND p_size BETWEEN 1 AND 10
+                AND l_shipmode IN ('AIR', 'AIR REG')
+                AND l_shipinstruct = 'DELIVER IN PERSON'
+
+                UNION ALL
+
+                SELECT
+                l_extendedprice * (1 - l_discount) AS revenue
+                FROM
+                lineitem,
+                part
+                WHERE
+                p_partkey = l_partkey
+                AND p_brand = ?
+                AND p_container IN ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG')
+                AND l_quantity &gt;= ?
+                AND l_quantity &lt;= ? + 10
+                AND p_size BETWEEN 1 AND 15
+                AND l_shipmode IN ('AIR', 'AIR REG')
+                AND l_shipinstruct = 'DELIVER IN PERSON'
+                ) AS all_revenues
+            </statement>
+        </procedure>
+
+
+
+        <procedure name="Q20">
+            <statement name="query_stmt">
+                SELECT
+                s_name,
+                s_address
+                FROM
+                supplier,
+                nation
+                WHERE
+                s_suppkey IN (
+                SELECT
+                ps_suppkey
+                FROM
+                partsupp
+                WHERE
+                ps_partkey IN (
+                SELECT
+                p_partkey
+                FROM
+                part
+                WHERE
+                p_name LIKE ?
+                )
+                AND ps_availqty &gt; (
+                SELECT
+                CAST(0.5 * SUM(l_quantity) AS DOUBLE) AS qty_sum
+                FROM
+                lineitem
+                WHERE
+                l_partkey = ps_partkey
+                AND l_suppkey = ps_suppkey
+                AND l_shipdate &gt;= CAST(? AS DATE)
+                AND l_shipdate &lt; CAST(? AS DATE) + INTERVAL '1' YEAR
+                )
+                )
+                AND s_nationkey = n_nationkey
+                AND n_name = ?
+                ORDER BY
+                s_name
+            </statement>
+        </procedure>
+
+        <procedure name="Q21">
+            <statement name="query_stmt">
+                SELECT
+                s_name,
+                COUNT(*) AS numwait
+                FROM
+                supplier
+                JOIN lineitem l1 ON s_suppkey = l1.l_suppkey
+                JOIN orders o ON o_orderkey = l1.l_orderkey
+                JOIN nation n ON s_nationkey = n_nationkey
+                WHERE
+                o_orderstatus = 'F'
+                AND l1.l_receiptdate &gt; l1.l_commitdate
+                AND EXISTS (
+                SELECT 1
+                FROM lineitem l2
+                WHERE l2.l_orderkey = l1.l_orderkey
+                AND l2.l_suppkey &lt;&gt; l1.l_suppkey
+                )
+                AND NOT EXISTS (
+                SELECT 1
+                FROM lineitem l3
+                WHERE l3.l_orderkey = l1.l_orderkey
+                AND l3.l_suppkey &lt;&gt; l1.l_suppkey
+                AND l3.l_receiptdate &gt; l3.l_commitdate
+                )
+                AND n.n_name = ?
+                GROUP BY
+                s_name
+                ORDER BY
+                numwait DESC,
+                s_name
+                LIMIT 100
+            </statement>
+        </procedure>
+
+
+
+        <procedure name="Q22">
+            <statement name="query_stmt">
+                select cntrycode, count(*) as numcust, sum(c_acctbal) as totacctbal from ( select substring(c_phone from 1 for 2) as cntrycode, c_acctbal from customer where substring(c_phone from 1 for 2) in (?, ?, ?, ?, ?, ?, ?) and c_acctbal > ( select avg(c_acctbal) from customer where c_acctbal > 0.00 and substring(c_phone from 1 for 2) in (?, ?, ?, ?, ?, ?, ?) ) and not exists ( select * from orders where o_custkey = c_custkey ) ) as custsale group by cntrycode order by cntrycode
+            </statement>
+        </procedure>
+
+    </dialect>
+</dialects>

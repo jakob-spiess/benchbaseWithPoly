@@ -181,7 +181,7 @@ public abstract class BenchmarkModule {
     List<String> names = new ArrayList<>();
     if (db_type != null) {
       DatabaseType ddl_db_type = db_type;
-      System.out.println(ddl_db_type);
+      // System.out.println(ddl_db_type);
       // HACK: Use MySQL if we're given MariaDB
       if (ddl_db_type == DatabaseType.MARIADB) ddl_db_type = DatabaseType.MYSQL;
       names.add("ddl-" + ddl_db_type.name().toLowerCase() + ".sql");
@@ -189,10 +189,10 @@ public abstract class BenchmarkModule {
     names.add("ddl-generic.sql");
 
     for (String fileName : names) {
-      System.out.println(fileName);
+      // System.out.println(fileName);
       final String benchmarkName = getBenchmarkName();
       final String path = "/benchmarks/" + benchmarkName + "/" + fileName;
-      System.out.println(path);
+      // System.out.println(path);
 
       try (InputStream stream = this.getClass().getResourceAsStream(path)) {
         if (stream != null) {

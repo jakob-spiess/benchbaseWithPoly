@@ -32,7 +32,7 @@ public class Q11 extends GenericQuery {
           """
             SELECT
                ps_partkey,
-               SUM(ps_supplycost * ps_availqty) AS VALUE
+               SUM(ps_supplycost * ps_availqty) AS total_VALUE
             FROM
                partsupp,
                supplier,
@@ -46,15 +46,15 @@ public class Q11 extends GenericQuery {
             HAVING
                SUM(ps_supplycost * ps_availqty) > (
                SELECT
-                  SUM(ps_supplycost * ps_availqty) * ?
+                  SUM(ps_supplycost * ps_availqty)
                FROM
                   partsupp, supplier, nation
                WHERE
                   ps_suppkey = s_suppkey
                   AND s_nationkey = n_nationkey
-                  AND n_name = ? )
+                  AND n_name = ? ) * ?
                ORDER BY
-                  VALUE DESC
+                  total_VALUE DESC
             """);
 
   @Override
@@ -68,8 +68,8 @@ public class Q11 extends GenericQuery {
 
     PreparedStatement stmt = this.getPreparedStatement(conn, query_stmt);
     stmt.setString(1, nation);
-    stmt.setDouble(2, fraction);
-    stmt.setString(3, nation);
+    stmt.setString(2, nation);
+    stmt.setDouble(3, fraction);
     return stmt;
   }
 }

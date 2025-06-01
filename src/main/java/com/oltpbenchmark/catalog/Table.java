@@ -55,6 +55,15 @@ public class Table extends AbstractCatalogObject {
     return this.columns.get(index);
   }
 
+  public Column getColumn(String name) {
+    for (Column column : this.columns) {
+      if (column.getName().equalsIgnoreCase(name)) {
+        return column;
+      }
+    }
+    return null; // Or throw exception if preferred
+  }
+
   public int[] getColumnTypes() {
     int[] types = new int[this.getColumnCount()];
     for (Column catalog_col : this.getColumns()) {
